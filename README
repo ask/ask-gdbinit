@@ -1,0 +1,6 @@
+INSTALLATION
+
+Add this to your ~/.gdbinit:
+
+    source <path to ask-gdbinit>/gdbinit
+    
