@@ -2,6 +2,9 @@ source ~/.gdb/reverseEngineeringNet.gdbinit
 
 set disassembly-flavor att
 
+set print asm-demangle on
+set print demangle on
+
 define ctx
     context
     end 
