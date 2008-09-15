@@ -4,6 +4,7 @@ set disassembly-flavor att
 
 set print asm-demangle on
 set print demangle on
+context-off
 
 define ctx
     context
