@@ -4,7 +4,7 @@
 # DESCRIPTION: A user-friendly gdb configuration file.
 #
 #
-# REVISION : 7.1
+# REVISION : 7.1 
 #
 #
 # CONTRIBUTORS: mammon_, elaine, pusillus, mong, zhang le, l0kit,
@@ -25,7 +25,7 @@
 #     obviously invalid address. See below:
 #     gdb$ dd 0xffffffff
 #     FFFFFFFF : Cannot access memory at address 0xffffffff
-#    
+#
 #   Version 7.0
 #     Added cls command.
 #     Improved documentation of many commands.
@@ -102,6 +102,13 @@
 #     Add dump, append, set write, etc commands
 #     Add more tips !
 
+# FIXME this doesnt work in mac os x, either here or at the end... weird !!!
+set $SHOW_CONTEXT = 1
+set $SHOW_NEST_INSN = 0
+
+set $CONTEXTSIZE_STACK = 6
+set $CONTEXTSIZE_DATA  = 8
+set $CONTEXTSIZE_CODE  = 10
 
 
 
@@ -642,8 +649,7 @@ define dd
     if $argc != 1
         help dd
     else
-        if ((($arg0 >> 0x18) == 0x40) || (($arg0 >> 0x18) == 0x08) || \
-           (($arg0 >> 0x18) == 0xBF))
+        if ((($arg0 >> 0x18) == 0x40) || (($arg0 >> 0x18) == 0x08) || (($arg0 >> 0x18) == 0xBF))
             set $data_addr = $arg0
             ddump 0x10
         else
@@ -658,16 +664,14 @@ end
 
 
 define datawin
-    if ((($esi >> 0x18) == 0x40) || (($esi >> 0x18) == 0x08) || \
-        (($esi >> 0x18) == 0xBF))
+    set $CONTEXTSIZE_DATA  = 8
+    if ((($esi >> 0x18) == 0x40) || (($esi >> 0x18) == 0x08) || (($esi >> 0x18) == 0xBF))
         set $data_addr = $esi
     else
-        if ((($edi >> 0x18) == 0x40) || (($edi >> 0x18) == 0x08) || \
-            (($edi >> 0x18) == 0xBF))
+        if ((($edi >> 0x18) == 0x40) || (($edi >> 0x18) == 0x08) || (($edi >> 0x18) == 0xBF))
             set $data_addr = $edi
         else
-            if ((($eax >> 0x18) == 0x40) || (($eax >> 0x18) == 0x08) || \
-                (($eax >> 0x18) == 0xBF))
+            if ((($eax >> 0x18) == 0x40) || (($eax >> 0x18) == 0x08) || (($eax >> 0x18) == 0xBF))
                 set $data_addr = $eax
             else
                 set $data_addr = $esp
@@ -686,6 +690,9 @@ end
 
 # _______________process context______________
 define context
+    set $CONTEXTSIZE_STACK = 6
+    set $CONTEXTSIZE_CODE  = 8
+ 
     echo \033[36m
     printf "----------------------------------------"
     printf "----------------------------------[regs]\n"
@@ -701,11 +708,12 @@ define context
         hexdump $context_t
         set $context_i--
     end
-    datawin
+# FIXME - uncomment this if you want to have datawin to be displayed
+ #   datawin
     echo \033[36m
     printf "[%04X:%08X]-------------------------", $cs, $eip
     printf "----------------------------------[code]\n"
-    echo \033[37m
+    echo \033[36m
     set $context_i = $CONTEXTSIZE_CODE
     if($context_i > 0)
         x /i $pc
@@ -898,7 +906,7 @@ end
 
 
 define cft
-    if (($eflags >> 8) & 1)
+    if (($eflags >>8) & 1)
         set $eflags = $eflags&~0x100
     else
         set $eflags = $eflags|0x100
@@ -1248,16 +1256,18 @@ end
 define hook-stop
 
     # this makes 'context' be called at every BP/step
-    if ($SHOW_CONTEXT > 0)
+# FIXME - Just commented out all this stuff because variables into the function dont work
+#         I dont see any big deal losing the > 0 display...
+ #   if ($SHOW_CONTEXT > 0)
         context
-    end
-    if ($SHOW_NEST_INSN > 0)
-        set $x = $_nest
-        while ($x > 0)
-            printf "\t"
-            set $x = $x - 1
-        end
-    end
+ #   end
+ #   if ($SHOW_NEST_INSN > 0)
+#        set $x = $_nest
+#        while ($x > 0)
+#            printf "\t"
+#            set $x = $x - 1
+#        end
+ #   end
 end
 document hook-stop
 !!! FOR INTERNAL USE ONLY - DO NOT CALL !!!
@@ -1443,7 +1453,7 @@ end
 
 set confirm off
 set verbose off
-set prompt \033[01;31mgdb$ \033[0m
+set prompt \033[31mgdb$ \033[0m
 
 set output-radix 0x10
 set input-radix 0x10
